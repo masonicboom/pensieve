@@ -79,12 +79,6 @@ $(document).ready(function() {
     alert("data cleared");
   });
   
-  // $("#note-18 textarea[name=body]").val(getNote("note-18"));
-  // 
-  // $("#note-18 textarea[name=body]").change(function() {
-  //   saveNote("note-18", $("#note-18 textarea[name=body]").val());
-  // })
-  
   $("#new-button").click(function() {
     newNoteDiv("new-note").prependTo("#notes");
   })
@@ -102,9 +96,6 @@ $(document).ready(function() {
     }
   } else {
     initializeNotes();
-    
-    // var initialNote = addNote(new Date(), "My first note!");
-    // specializeNoteDiv($("#new-note"), initialNote);
   }
 });
 </script>
