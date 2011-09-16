@@ -1,7 +1,36 @@
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+
 <script type="text/javascript" src="sjcl.js"></script>
+
 <script type="text/javascript">
-encrypted = sjcl.encrypt("password", "some data");
-decrypted = sjcl.decrypt("password", encrypted);
-alert(encrypted);
-alert(decrypted);
+function html5StorageSupported() {
+  try {
+    return 'localStorage' in window && window['localStorage'] !== null;
+  } catch (e) {
+    return false;
+  }
+}
+
+function saveMessage(id, message) {
+  localStorage[id] = sjcl.encrypt("password", message);
+}
+
+function loadMessage(id) {
+  return sjcl.decrypt("password", localStorage[id]);
+}
+
+$(document).ready(function() {
+  if(!html5StorageSupported()) {
+    alert("You don't have HTML5 storage! Your browser must be old or something.");
+    return;
+  }
+  
+  $("#message").val(loadMessage("message"));
+  
+  $("#message").change(function() {
+    saveMessage("message", $("#message").val());
+  })
+})
 </script>
+
+<textarea name="message" id="message" rows="8" cols="60"></textarea>
