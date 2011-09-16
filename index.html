@@ -11,12 +11,61 @@ function html5StorageSupported() {
   }
 }
 
-function saveMessage(id, message) {
-  localStorage[id] = sjcl.encrypt("password", message);
+function initializeNotes() {
+  localStorage["notes"] = "";
 }
 
-function loadMessage(id) {
-  return sjcl.decrypt("password", localStorage[id]);
+function getNoteIDs() {
+  var ids = localStorage["notes"].split(",");
+  ids.shift();
+  return ids;
+}
+
+function getNote(id) {
+  if(localStorage[id])
+    return JSON.parse(sjcl.decrypt("password", JSON.parse(localStorage[id])));
+}
+
+function saveNote(note) {
+  localStorage[note.id] = JSON.stringify(sjcl.encrypt("password", JSON.stringify(note)));
+}
+
+// blank note div (div has given id)
+function newNoteDiv(id) {
+  var div = $("div.note").first().clone();
+  div.attr("id", id);
+  div.children("textarea").val("");
+  div.children("textarea").change(noteBodyChanged);
+  return div;
+}
+
+function addNote(creationDate, body) {
+  var note = { "id" : nextNoteID(), "creation_date" : creationDate, "body" : body };
+  saveNote(note);
+  localStorage["notes"] += "," + note.id;
+  return note;
+}
+
+function specializeNoteDiv(div, note) {
+  div.attr("id", note.id);
+  div.children("textarea[name=body]").val(note.body);
+}
+
+function nextNoteID() {
+  return "note-" + Math.floor(Math.random() * 1000);
+}
+
+function noteBodyChanged() {
+  var parentDiv = $(this).parent("div.note");
+  var id = parentDiv.attr("id");
+  if(id == "new-note") {
+    var note = addNote(new Date(), $(this).val());
+    parentDiv.attr("id", note.id);
+  } else {
+    var note = getNote(id);
+    note.body = $(this).val();
+    saveNote(note);
+  }
 }
 
 $(document).ready(function() {
@@ -25,12 +74,48 @@ $(document).ready(function() {
     return;
   }
   
-  $("#message").val(loadMessage("message"));
+  $("#reset-all").click(function() {
+    localStorage.clear();
+    alert("data cleared");
+  });
   
-  $("#message").change(function() {
-    saveMessage("message", $("#message").val());
+  // $("#note-18 textarea[name=body]").val(getNote("note-18"));
+  // 
+  // $("#note-18 textarea[name=body]").change(function() {
+  //   saveNote("note-18", $("#note-18 textarea[name=body]").val());
+  // })
+  
+  $("#new-button").click(function() {
+    newNoteDiv("new-note").prependTo("#notes");
   })
-})
+  
+  $("#new-note textarea").change(noteBodyChanged);
+  
+  if(localStorage["notes"]) {
+    var noteIDs = getNoteIDs();
+    noteIDs.reverse();
+    for(i in noteIDs) {
+      var note = getNote(noteIDs[i]);
+      var div = newNoteDiv(note.id);
+      div.appendTo("#notes");
+      specializeNoteDiv(div, note);
+    }
+    
+    $("#new-note").remove();
+  } else {
+    initializeNotes();
+    
+    // var initialNote = addNote(new Date(), "My first note!");
+    // specializeNoteDiv($("#new-note"), initialNote);
+  }
+});
 </script>
 
-<textarea name="message" id="message" rows="8" cols="60"></textarea>
+<input type="button" id="new-button" value="New Note" />
+<input type="button" id="reset-all" value="Reset All" />
+
+<div id="notes">
+  <div class="note" id="new-note">
+    <textarea name="body" rows="8" cols="60"></textarea>
+  </div>
+</div>
